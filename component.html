@@ -1,0 +1,45 @@
+<element name="jpka-socket.io-sl" extends="jpka-sl">
+  <template>
+    <style>
+      @host {}
+    </style>  
+  </template>
+  <script>
+    Polymer.register(this, {
+      host: "http://localhost",
+      path: "/",
+      idAttribute: "id",
+      set io(io) {
+        this._io = io;
+        this.listen();
+      },
+      unlisten: function() {
+        this._socket.removeAllListeners();
+      },
+      listen: function() {
+        var self = this,
+        socket;
+
+        if (this._socket) {
+          this.unlisten();
+        }
+        this._socket = socket = this._io.connect(this.host + this.path);
+
+        socket.on("create", function(model) {
+          var child;
+          if (!self.childTagName) throw new Error("childTagName was not declared");
+
+          child = document.createElement(self.childTagName);
+          if (model[self.idAttribute]) {
+            child.id = model.id;
+          }
+          child.model = model;
+          self.appendChild(child);
+        });
+        socket.on("update", function(model) {
+          self.querySelector("#" + model[self.idAttribute]).model = model;
+        });
+      }
+    });
+  </script>
+</element>

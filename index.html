@@ -1,10 +1,101 @@
-<element name="my-element">
+<element name="jpka-sl">
   <template>
     <style>
       @host {}
     </style>  
   </template>
   <script>
-    Polymer.register(this, {});
+    (function(context) {
+
+      function add(el, nodeName, props) {
+        var element = document.createElement(nodeName),
+        prop;
+
+        if (props) {
+          for (prop in props) {
+            element[prop] = props[prop];
+          }
+        }
+        el.appendChild(element);
+      }
+
+      function addBatch(el, nodeName, num) {
+        for (var i = 0; i < num; i++) {
+          add(el, nodeName);
+        }
+      }
+
+      function addBatchWithProps(el, nodeName, propsList) {
+        propsList.forEach(function(props) {
+          add(el, nodeName, props);
+        });
+      }
+
+      Polymer.register(context, {
+        add: function(nodeName, secondParam) {
+          switch (typeof secondParam) {
+            case "undefined":
+              add(this, nodeName);
+              break;
+            case "number":
+              addBatch(this, nodeName, secondParam);
+              break;
+            case "object":
+              if (Object.prototype.toString.call(secondParam).indexOf("Array") > -1) {
+                addBatchWithProps(this, nodeName, secondParam);
+              } else {
+                add(this, nodeName, secondParam);
+              }
+              break;
+          }
+        }
+      });
+    })(this);
+  </script>
+</element>
+
+<element name="jpka-socket.io-sl" extends="jpka-sl">
+  <template>
+    <style>
+      @host {}
+    </style>  
+  </template>
+  <script>
+    Polymer.register(this, {
+      host: "http://localhost",
+      path: "/",
+      idAttribute: "id",
+      set io(io) {
+        this._io = io;
+        this.listen();
+      },
+      unlisten: function() {
+        this._socket.removeAllListeners();
+      },
+      listen: function() {
+        var self = this,
+        socket;
+
+        if (this._socket) {
+          this.unlisten();
+        }
+        this._socket = socket = this._io.connect(this.host + this.path);
+
+        socket.on("create", function(model) {
+          var child;
+          if (!self.childTagName) throw new Error("childTagName was not declared");
+
+          child = document.createElement(self.childTagName);
+          if (model[self.idAttribute]) {
+            child.id = model.id;
+          }
+          child.model = model;
+          self.appendChild(child);
+        });
+        socket.on("update", function(model) {
+          self.querySelector("#" + model[self.idAttribute]).model = model;
+        });
+      }
+    });
   </script>
 </element>
