@@ -1,4 +1,4 @@
-<element name="jpka-sl">
+<element name="smart-collection">
   <template>
     <style>
       @host {}
@@ -48,13 +48,19 @@
               }
               break;
           }
+        },
+        get: function(id) {
+          return this.querySelector("#" + id);
+        },
+        remove: function(id) {
+          this.removeChild(this.get(id));
         }
       });
     })(this);
   </script>
 </element>
 
-<element name="jpka-socket.io-sl" extends="jpka-sl">
+<element name="racer-element">
   <template>
     <style>
       @host {}
@@ -62,39 +68,90 @@
   </template>
   <script>
     Polymer.register(this, {
-      host: "http://localhost",
-      path: "/",
-      idAttribute: "id",
-      set io(io) {
-        this._io = io;
-        this.listen();
-      },
-      unlisten: function() {
-        this._socket.removeAllListeners();
-      },
-      listen: function() {
-        var self = this,
-        socket;
-
-        if (this._socket) {
-          this.unlisten();
+      ready: function() {
+        var racer = (this.parentNode && this.parentNode.racer) || window.racer;
+        if (racer) {
+          this.racer = racer;
         }
-        this._socket = socket = this._io.connect(this.host + this.path);
+      },
+      set racer(racer) {
+        var self = this;
+        racer.ready(function(model) {
+          self.model = model;
+        });
+      },
+      set child(element) {
+        while (this.firstElementChild) {
+          this.removeChild(this.firstElementChild);
+        }
+        this.appendChild(element);
+        if (this._model) {
+          this.update();
+        }
+      },
+      get child() {
+        return this.firstElementChild;
+      },
+      set model(model) {
+        var self = this;
+        this._model = model;
 
-        socket.on("create", function(model) {
-          var child;
-          if (!self.childTagName) throw new Error("childTagName was not declared");
-
-          child = document.createElement(self.childTagName);
-          if (model[self.idAttribute]) {
-            child.id = model.id;
+        model.on("change", "*", this.onChange.bind(this));
+        model.subscribe(function() {
+          if (self.child) {
+            self.update();
           }
-          child.model = model;
-          self.appendChild(child);
+          self.dispatchEvent(new Event("subscribed"));
         });
-        socket.on("update", function(model) {
-          self.querySelector("#" + model[self.idAttribute]).model = model;
-        });
+      },
+      get model() {
+        return this._model;
+      },
+      update: function(data) {
+        this.child.model = data || this._model.get();
+      },
+      onChange: function(name, value) {
+        if (!this.child || !this.child.model) return;
+        this.child.model[name] = value;
+      }
+    });
+  </script>
+</element>
+
+<element name="racer-collection" extends="racer-element">
+  <template>
+    <style>
+      @host {}
+    </style>  
+    <smart-collection id="collection"></smart-collection>
+  </template>
+  <script>
+    Polymer.register(this, {
+      onItemDelete: function(id) {
+        this.$.collection.remove(id);
+      },
+      onItemCreate: function(id) {
+        var wrapper = document.createElement("racer-element");
+
+        if (!this.childType) throw new Error("childType was not declared");
+        wrapper.child = document.createElement(this.childType);
+        wrapper.model = this._model.at(id);
+        wrapper.id = id;
+        this.$.collection.appendChild(wrapper);
+      },
+      onItemUpdate: function(id, data) {
+        this.$.collection.get(id).update(data);
+      },
+      onChange: function(id, data) {
+        if (this.$.collection.get(id)) {
+          if (data) {
+            this.onItemUpdate(id, data);
+          } else {
+            this.onItemDelete(id);
+          }
+        } else {
+          this.onItemCreate(id);
+        }
       }
     });
   </script>

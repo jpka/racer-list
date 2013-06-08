@@ -1,61 +1,65 @@
-describe("socket.io-sl", function() {
+describe("racer-collection", function() {
   var element,
-  stubSocket = {
-    listeners: {},
-    on: function(what, fn) {
-      var listeners = this.listeners;
-      if (!listeners[what]) {
-        listeners[what] = [];
-      }
-      listeners[what].push(fn);
-    },
-    emit: function(what, arg) {
-      var listeners = this.listeners[what];
-      if (listeners) {
-        listeners.forEach(function(fn) {
-          fn(arg);
+  coll,
+  modelData = {a: 1, b: 2},
+  Model = function() {
+    return {
+      events: {},
+      get: function() {
+        return modelData;
+      },
+      on: function(name, path, cb) {
+        if (!this.events[name]) {
+          this.events[name] = [];
+        }
+        this.events[name].push(cb);
+      },
+      emit: function(name, args) {
+        this.events[name].forEach(function(cb) {
+          cb.apply(this, args);
         });
+      },
+      subscribe: function(cb) {
+        setTimeout(cb, 500);
+      },
+      at: function() {
+        return new Model();
       }
-    }
-  },
-  stubIO = {
-    connect: function() {
-      return stubSocket;
-    }
+    };
   };
 
-  function populateList() {
-    element.add("element-with-model", [{id: "a"}, {id: "b"}]);
-  }
-
-  beforeEach(function() {
-    element = fixtures.window().document.createElement("jpka-socket.io-sl");
-    element.childTagName = "element-with-model";
-    element.path = "/path";
-    element.io = stubIO;
+  beforeEach(function(done) {
+    element = fixtures.window().document.createElement("racer-collection");
+    coll = element.$.collection;
+    element.childType = "element-with-model";
+    element.addEventListener("subscribed", function() {
+      done();
+    });
+    model = element.model = new Model();
   });
 
-  it("should respond to create events", function() {
-    var model = {id: "a", a: 1, b: 2};
-    stubSocket.emit("create", model);
-    expect(element.childNodes.length).to.equal(1);
-    expect(element.childNodes[0].model).to.deep.equal(model);
-    expect(element.childNodes[0].id).to.equal("a");
+  it("should have a collection", function() {
+    expect(coll).to.exist.and.to.have.property("add");
   });
 
-  /*it("should respond to delete events", function() {
-    populateList();
-    stubSocket.emit("delete", {id: "1"});
+  it("should create a racer-element that wraps around a new element of the designated type when a new document is inserted", function() {
+    model.emit("change", ["a", modelData]);
+    expect(coll.childNodes.length).to.equal(1);
+    expect(coll.firstElementChild.nodeName).to.equal("RACER-ELEMENT");
+    expect(coll.firstElementChild.child.nodeName).to.equal("ELEMENT-WITH-MODEL");
+    expect(coll.firstElementChild.child.model).to.deep.equal(modelData);
+  });
 
-    expect(element.childNodes.length).to.equal(1);
-    expect(element.childNodes[0].id).to.equal("2");
-  });*/
+  it("should manage when an existing document is replaced", function() {
+    var newModelData = {a: 2, b: 1};
+    model.emit("change", ["a", modelData]);
+    model.emit("change", ["a", newModelData]);
+    expect(coll.get("a").child.model).to.deep.equal(newModelData);
+  });
 
-  /*it("should respond to update events", function() {
-    var model = {id: "b", a: 1, b: 2};
-    populateList();
-    stubSocket.emit("update", model);
-
-    expect(element.querySelector("#b").model).to.deep.equal(model);
-  });*/
+  it("should delete when the document is deleted", function() {
+    model.emit("change", ["a", modelData]);
+    model.emit("change", ["a"]);
+    expect(coll.childNodes.length).to.equal(0);
+  });
 });

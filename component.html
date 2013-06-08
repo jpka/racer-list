@@ -1,44 +1,37 @@
-<element name="jpka-socket.io-sl" extends="jpka-sl">
+<element name="racer-collection" extends="racer-element">
   <template>
     <style>
       @host {}
     </style>  
+    <smart-collection id="collection"></smart-collection>
   </template>
   <script>
     Polymer.register(this, {
-      host: "http://localhost",
-      path: "/",
-      idAttribute: "id",
-      set io(io) {
-        this._io = io;
-        this.listen();
+      onItemDelete: function(id) {
+        this.$.collection.remove(id);
       },
-      unlisten: function() {
-        this._socket.removeAllListeners();
+      onItemCreate: function(id) {
+        var wrapper = document.createElement("racer-element");
+
+        if (!this.childType) throw new Error("childType was not declared");
+        wrapper.child = document.createElement(this.childType);
+        wrapper.model = this._model.at(id);
+        wrapper.id = id;
+        this.$.collection.appendChild(wrapper);
       },
-      listen: function() {
-        var self = this,
-        socket;
-
-        if (this._socket) {
-          this.unlisten();
-        }
-        this._socket = socket = this._io.connect(this.host + this.path);
-
-        socket.on("create", function(model) {
-          var child;
-          if (!self.childTagName) throw new Error("childTagName was not declared");
-
-          child = document.createElement(self.childTagName);
-          if (model[self.idAttribute]) {
-            child.id = model.id;
+      onItemUpdate: function(id, data) {
+        this.$.collection.get(id).update(data);
+      },
+      onChange: function(id, data) {
+        if (this.$.collection.get(id)) {
+          if (data) {
+            this.onItemUpdate(id, data);
+          } else {
+            this.onItemDelete(id);
           }
-          child.model = model;
-          self.appendChild(child);
-        });
-        socket.on("update", function(model) {
-          self.querySelector("#" + model[self.idAttribute]).model = model;
-        });
+        } else {
+          this.onItemCreate(id);
+        }
       }
     });
   </script>
