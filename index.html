@@ -60,7 +60,7 @@
   </script>
 </element>
 
-<element name="racer-element">
+<element name="racer-element" attributes="at">
   <template>
     <style>
       @host {}
@@ -70,9 +70,25 @@
     Polymer.register(this, {
       ready: function() {
         var racer = (this.parentNode && this.parentNode.racer) || window.racer;
+
         if (racer) {
           this.racer = racer;
+        };
+      },
+      trigger: function() {
+        var name = arguments[0],
+        data = [].slice.call(arguments, 1),
+        fname,
+        on;
+
+        fname = name.split(":").map(function(word) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }).join("");
+        
+        if (on = this["on" + fname]) {
+          on.apply(this, data);
         }
+        this.dispatchEvent(new Event(name, {detail: data}));
       },
       set racer(racer) {
         var self = this;
@@ -94,14 +110,16 @@
       },
       set model(model) {
         var self = this;
+        if (this.at) {
+          model = model.at(this.at);
+        }
         this._model = model;
 
-        model.on("change", "*", this.onChange.bind(this));
+        model.on("all", "**", function(path, ev, data, oldData) {
+          self.trigger(ev, path, data, oldData);
+        });
         model.subscribe(function() {
-          if (self.child) {
-            self.update();
-          }
-          self.dispatchEvent(new Event("subscribed"));
+          self.trigger("subscribe");
         });
       },
       get model() {
@@ -109,6 +127,11 @@
       },
       update: function(data) {
         this.child.model = data || this._model.get();
+      },
+      onSubscribe: function() {
+        if (this.child) {
+          this.update();
+        }
       },
       onChange: function(name, value) {
         if (!this.child || !this.child.model) return;
@@ -127,17 +150,43 @@
   </template>
   <script>
     Polymer.register(this, {
+      add: function(id) {
+        var wrapper = document.createElement("racer-element"),
+        self = this;
+
+        if (!this.childType) throw new Error("childType was not declared");
+        wrapper.child = document.createElement(this.childType);
+        wrapper.addEventListener("subscribe", function() {
+          self.trigger("item:subscribe");
+        });
+        wrapper.model = this._model.at(id);
+        wrapper.id = id;
+        this.$.collection.appendChild(wrapper);
+      },
+      onSubscribe: function() {
+        var key,
+        data = this._model.get(),
+        count = Object.keys(data).length,
+        subscribed = 0,
+        self = this;
+
+        for (key in data) {
+          this.add(key);
+        }
+
+        this.addEventListener("item:subscribe", function() {
+          subscribed++;
+          if (subscribed >= count) {
+            subscribed = 0;
+            self.trigger("items:subscribe");
+          }
+        });
+      },
       onItemDelete: function(id) {
         this.$.collection.remove(id);
       },
       onItemCreate: function(id) {
-        var wrapper = document.createElement("racer-element");
-
-        if (!this.childType) throw new Error("childType was not declared");
-        wrapper.child = document.createElement(this.childType);
-        wrapper.model = this._model.at(id);
-        wrapper.id = id;
-        this.$.collection.appendChild(wrapper);
+        this.add(id);
       },
       onItemUpdate: function(id, data) {
         this.$.collection.get(id).update(data);
@@ -145,12 +194,12 @@
       onChange: function(id, data) {
         if (this.$.collection.get(id)) {
           if (data) {
-            this.onItemUpdate(id, data);
+            this.trigger("item:update", id, data);
           } else {
-            this.onItemDelete(id);
+            this.trigger("item:delete", id);
           }
         } else {
-          this.onItemCreate(id);
+          this.trigger("item:create", id);
         }
       }
     });

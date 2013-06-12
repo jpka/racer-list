@@ -7,17 +7,43 @@
   </template>
   <script>
     Polymer.register(this, {
+      add: function(id) {
+        var wrapper = document.createElement("racer-element"),
+        self = this;
+
+        if (!this.childType) throw new Error("childType was not declared");
+        wrapper.child = document.createElement(this.childType);
+        wrapper.addEventListener("subscribe", function() {
+          self.trigger("item:subscribe");
+        });
+        wrapper.model = this._model.at(id);
+        wrapper.id = id;
+        this.$.collection.appendChild(wrapper);
+      },
+      onSubscribe: function() {
+        var key,
+        data = this._model.get(),
+        count = Object.keys(data).length,
+        subscribed = 0,
+        self = this;
+
+        for (key in data) {
+          this.add(key);
+        }
+
+        this.addEventListener("item:subscribe", function() {
+          subscribed++;
+          if (subscribed >= count) {
+            subscribed = 0;
+            self.trigger("items:subscribe");
+          }
+        });
+      },
       onItemDelete: function(id) {
         this.$.collection.remove(id);
       },
       onItemCreate: function(id) {
-        var wrapper = document.createElement("racer-element");
-
-        if (!this.childType) throw new Error("childType was not declared");
-        wrapper.child = document.createElement(this.childType);
-        wrapper.model = this._model.at(id);
-        wrapper.id = id;
-        this.$.collection.appendChild(wrapper);
+        this.add(id);
       },
       onItemUpdate: function(id, data) {
         this.$.collection.get(id).update(data);
@@ -25,12 +51,12 @@
       onChange: function(id, data) {
         if (this.$.collection.get(id)) {
           if (data) {
-            this.onItemUpdate(id, data);
+            this.trigger("item:update", id, data);
           } else {
-            this.onItemDelete(id);
+            this.trigger("item:delete", id);
           }
         } else {
-          this.onItemCreate(id);
+          this.trigger("item:create", id);
         }
       }
     });
