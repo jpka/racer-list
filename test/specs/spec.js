@@ -36,9 +36,8 @@ describe("racer-collection", function() {
   modelData[1] = {b: 2};
 
   beforeEach(function(done) {
-    element = fixtures.window().document.createElement("racer-collection");
+    element = fixtures.window().document.querySelector("racer-collection").cloneNode();
     coll = element.collection;
-    element.childType = "element-with-model";
     element.addEventListener("subscribe", function() {
       done();
     });
@@ -47,6 +46,7 @@ describe("racer-collection", function() {
 
   it("should have a collection", function() {
     expect(coll).to.exist;
+    expect(coll.nodeName).to.equal("SPAN");
   });
 
   it("should populate the collection when a model is attached", function(done) {
