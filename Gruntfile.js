@@ -2,7 +2,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     concat: {
       build: {
-        src: ["components/smart-collection/index.html", "components/racer-element/index.html", "component.html"],
+        src: ["components/racer-element/index.html", "component.html"],
         dest: "index.html"
       }
     },

@@ -3,10 +3,28 @@
     <style>
       @host {}
     </style>  
-    <smart-collection id="collection"></smart-collection>
   </template>
   <script>
     Polymer.register(this, {
+      len: 0,
+      get collection() {
+        if (this.child) return this.child;
+        this.child = document.createElement("div");
+        this.child.push = function(node) {
+          this.appendChild(node);
+        };
+        return this.child;
+      },
+      set collection(collection) {
+        this.child = collection;
+      },
+      create: function(model) {
+        var index = this.len - 1;
+
+        this._model.set(index, model || {});
+        this.add(index);
+        this.len++;
+      },
       add: function(id) {
         var wrapper = document.createElement("racer-element"),
         self = this;
@@ -17,8 +35,8 @@
           self.trigger("item:subscribe");
         });
         wrapper.model = this._model.at(id);
-        wrapper.id = id;
-        this.$.collection.appendChild(wrapper);
+        wrapper.id = "r-" + id;
+        this.collection.push(wrapper);
       },
       onSubscribe: function() {
         var key,
@@ -27,10 +45,6 @@
         subscribed = 0,
         self = this;
 
-        for (key in data) {
-          this.add(key);
-        }
-
         this.addEventListener("item:subscribe", function() {
           subscribed++;
           if (subscribed >= count) {
@@ -38,18 +52,23 @@
             self.trigger("items:subscribe");
           }
         });
+
+        for (key in data) {
+          this.add(key);
+        }
+        this.len = count;
       },
       onItemDelete: function(id) {
-        this.$.collection.remove(id);
+        this.collection.removeChild(this.collection.childNodes[id]);
       },
       onItemCreate: function(id) {
         this.add(id);
       },
       onItemUpdate: function(id, data) {
-        this.$.collection.get(id).update(data);
+        this.collection.childNodes[id].update(data);
       },
       onChange: function(id, data) {
-        if (this.$.collection.get(id)) {
+        if (this.collection.childNodes[id]) {
           if (data) {
             this.trigger("item:update", id, data);
           } else {
