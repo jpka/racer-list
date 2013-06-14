@@ -1,12 +1,10 @@
 <element name="racer-collection" extends="racer-element" attributes="collectionType itemType">
-  <template>
-    <style>
-      @host {}
-    </style>  
-  </template>
   <script>
     Polymer.register(this, {
       len: 0,
+      get items() {
+        return this.collection.items;
+      },
       get collection() {
         if (this.child) return this.child;
         this.child = document.createElement(this.collectionType || "div");
@@ -14,6 +12,13 @@
           this.child.push = function(node) {
             this.appendChild(node);
           };
+        };
+        if (!this.child.items) {
+          Object.defineProperty(this.child, "items", {
+            get: function() {
+              return this.children;
+            }
+          });
         }
         return this.child;
       },
@@ -58,16 +63,16 @@
         this.len = count;
       },
       onItemDelete: function(id) {
-        this.collection.removeChild(this.collection.childNodes[id]);
+        this.collection.removeChild(this.collection.items[id]);
       },
       onItemCreate: function(id) {
         this.add(id);
       },
       onItemUpdate: function(id, data) {
-        this.collection.childNodes[id].update(data);
+        this.collection.items[id].update(data);
       },
       onChange: function(id, data) {
-        if (this.collection.childNodes[id]) {
+        if (this.collection.items[id]) {
           if (data) {
             this.trigger("item:update", id, data);
           } else {

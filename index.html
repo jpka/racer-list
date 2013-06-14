@@ -3,6 +3,7 @@
     <style>
       @host {}
     </style>  
+    <div id="container"></div>
   </template>
   <script>
     require=(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({"proto":[function(require,module,exports){
@@ -12,11 +13,9 @@ var watch = require("watchjs").watch;
 
 module.exports = {
   ready: function() {
-    var racer = (this.parentNode && this.parentNode.racer) || window.racer;
-
-    if (racer) {
-      this.racer = racer;
-    };
+    if (this.firstElementChild) {
+      this.child = this.firstElementChild;
+    }
   },
   trigger: function() {
     var name = arguments[0],
@@ -33,34 +32,24 @@ module.exports = {
     }
     this.dispatchEvent(new Event(name, {detail: data}));
   },
+  set child(element) {
+    var container = this.$.container;
+
+    while (container.firstElementChild) {
+      container.removeChild(container.firstElementChild);
+    }
+    this.$.container.appendChild(element);
+
+    this.update();
+  },
+  get child() {
+    return this.$.container.firstElementChild;
+  },
   set racer(racer) {
     var self = this;
     racer.ready(function(model) {
       self.model = model;
     });
-  },
-  set child(element) {
-    var self = this;
-
-    while (this.firstElementChild) {
-      this.removeChild(this.firstElementChild);
-    }
-    this.appendChild(element);
-
-    if (element.model) {
-      if (this._model) {
-        this.update();
-      }
-      Object.keys(element.model).forEach(function(key) {
-        watch(element.model, key, function(name, action, newValue) {
-          if (!self._model) return;
-          self._model.set(key, newValue);
-        });
-      });
-    }
-  },
-  get child() {
-    return this.firstElementChild;
   },
   set model(model) {
     var self = this;
@@ -84,13 +73,23 @@ module.exports = {
       self.trigger(ev, path, data, oldData);
     });
   },
+  watchChildModel: function() {
+    var self = this;
+
+    Object.keys(self.child.model).forEach(function(key) {
+      watch(self.child.model, key, function(name, action, newValue) {
+        if (!self._model) return;
+        self._model.set(key, newValue);
+      });
+    });
+  },
   update: function(data) {
+    if (!this.child || !this.child.model || (!data && !this._model)) return;
     this.child.model = data || this._model.get();
+    this.watchChildModel();
   },
   onSubscribe: function() {
-    if (this.child && this.child.model) {
-      this.update();
-    }
+    this.update();
   },
   onChange: function(name, value) {
     if (!this.child || !this.child.model) return;
@@ -459,14 +458,12 @@ module.exports = {
 </element>
 
 <element name="racer-collection" extends="racer-element" attributes="collectionType itemType">
-  <template>
-    <style>
-      @host {}
-    </style>  
-  </template>
   <script>
     Polymer.register(this, {
       len: 0,
+      get items() {
+        return this.collection.items;
+      },
       get collection() {
         if (this.child) return this.child;
         this.child = document.createElement(this.collectionType || "div");
@@ -474,6 +471,13 @@ module.exports = {
           this.child.push = function(node) {
             this.appendChild(node);
           };
+        };
+        if (!this.child.items) {
+          Object.defineProperty(this.child, "items", {
+            get: function() {
+              return this.children;
+            }
+          });
         }
         return this.child;
       },
@@ -518,16 +522,16 @@ module.exports = {
         this.len = count;
       },
       onItemDelete: function(id) {
-        this.collection.removeChild(this.collection.childNodes[id]);
+        this.collection.removeChild(this.collection.items[id]);
       },
       onItemCreate: function(id) {
         this.add(id);
       },
       onItemUpdate: function(id, data) {
-        this.collection.childNodes[id].update(data);
+        this.collection.items[id].update(data);
       },
       onChange: function(id, data) {
-        if (this.collection.childNodes[id]) {
+        if (this.collection.items[id]) {
           if (data) {
             this.trigger("item:update", id, data);
           } else {

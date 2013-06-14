@@ -2,40 +2,12 @@ describe("racer-collection", function() {
   var element,
   coll,
   modelData = {},
-  Model = function(modelData) {
-    return {
-      events: {},
-      data: modelData,
-      get: function() {
-        return this.data;
-      },
-      on: function(name, path, cb) {
-        if (!this.events[name]) {
-          this.events[name] = [];
-        }
-        this.events[name].push(cb);
-      },
-      emit: function() {
-        var args = arguments;
-        this.events["all"].forEach(function(cb) {
-          cb.apply(this, args);
-        });
-      },
-      subscribe: function(cb) {
-        setTimeout(cb, 500);
-      },
-      at: function(path) {
-        return new Model(this.data[path]);
-      },
-      set: function(path, value) {
-        this.data[path] = value;
-      }
-    };
-  };
+  Model;
   modelData[0] = {a: 1};
   modelData[1] = {b: 2};
 
   beforeEach(function(done) {
+    Model = fixtures.window().Model;
     element = fixtures.window().document.querySelector("racer-collection").cloneNode();
     coll = element.collection;
     element.addEventListener("subscribe", function() {

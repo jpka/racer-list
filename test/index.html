@@ -3,16 +3,28 @@
 <html>
   <head>
     <script src="/base/node_modules/Polymer/polymer.min.js"></script>
+    <script src="/base/test/model.js"></script>
     <link rel="import" href="/base/index.html"/>
   </head>
   <body>
     <element name="element-with-model">
+      <template>
+        <div>{{model.text}}</div>
+      </template>
       <script>
         Polymer.register(this, {model: {}});
       </script>
     </element>
 
-    <racer-collection itemType="element-with-model" collectionType="span"></racer-collection>
+    <racer-collection id="element" itemType="element-with-model" collectionType="span"></racer-collection>
+    <script>
+      window.addEventListener("WebComponentsReady", function() {
+        var data = {};
+        data[0] = {text: "Text1"};
+        data[1] = {text: "Text2"};
+        document.querySelector("#element").model = new Model(data);
+      });
+    </script>
   </body>
 </html>
 
