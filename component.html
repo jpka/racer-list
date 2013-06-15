@@ -22,7 +22,7 @@
         return this.child;
       },
       push: function(model) {
-        var length = this._model.push(this.at, model);
+        var length = this._model.push(this.at, model || {});
         this.add(length - 1);
       },
       add: function(i) {
