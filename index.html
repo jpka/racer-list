@@ -474,7 +474,7 @@ module.exports = {
   </script>
 </element>
 
-<element name="racer-collection" extends="racer-element" attributes="collectionType itemType">
+<element name="racer-list" extends="racer-element" attributes="collectionType itemType">
   <script>
     Polymer.register(this, {
       get items() {
@@ -483,17 +483,17 @@ module.exports = {
       get collection() {
         if (this.child) return this.child;
         this.child = document.createElement(this.collectionType || "div");
-        if (!this.child.push) {
-          this.child.push = function(node) {
-            this.appendChild(node);
-          };
-        };
-        if (!this.child.items) {
-          Object.defineProperty(this.child, "items", {
-            get: function() {
-              return this.children;
+        if (!this.child.insertAt) {
+          this.child.insertAt = function(node, i) {
+            if (i >= this.items.length) {
+              this.appendChild(node);
+            } else {
+              this.insertBefore(node, this.items[i]);
             }
-          });
+          };
+        }
+        if (!this.child.items) {
+          this.child.items = this.child.children;
         }
         return this.child;
       },
@@ -509,7 +509,7 @@ module.exports = {
         wrapper.child = document.createElement(this.itemType);
         wrapper.model = this._model.at(this.at + "." + i);
         wrapper.id = "r-" + i;
-        this.collection.push(wrapper);
+        this.collection.insertAt(wrapper, i);
       },
       onModelLoad: function() {
         var key,
