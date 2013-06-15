@@ -1,7 +1,6 @@
 <element name="racer-collection" extends="racer-element" attributes="collectionType itemType">
   <script>
     Polymer.register(this, {
-      len: 0,
       get items() {
         return this.collection.items;
       },
@@ -22,65 +21,51 @@
         }
         return this.child;
       },
-      create: function(model) {
-        var index = this.len - 1;
-
-        this._model.set(index, model || {});
-        this.add(index);
-        this.len++;
+      push: function(model) {
+        var length = this._model.push(this.at, model);
+        this.add(length - 1);
       },
-      add: function(id) {
+      add: function(i) {
         var wrapper = document.createElement("racer-element"),
         self = this;
 
         if (!this.itemType) throw new Error("itemType was not declared");
         wrapper.child = document.createElement(this.itemType);
-        wrapper.addEventListener("subscribe", function() {
-          self.trigger("item:subscribe");
-        });
-        wrapper.model = this._model.at(id);
-        wrapper.id = "r-" + id;
+        wrapper.model = this._model.at(this.at + "." + i);
+        wrapper.id = "r-" + i;
         this.collection.push(wrapper);
       },
-      onSubscribe: function() {
+      onModelLoad: function() {
         var key,
-        data = this._model.get(),
-        count = Object.keys(data).length,
-        subscribed = 0,
-        self = this;
+        data,
+        i = 0;
 
-        this.addEventListener("item:subscribe", function() {
-          subscribed++;
-          if (subscribed >= count) {
-            subscribed = 0;
-            self.trigger("items:subscribe");
-          }
-        });
+        if (!this.at) throw new Error("at attribute must be specified");
+        data = this._model.get(this.at);
 
-        for (key in data) {
-          this.add(key);
-        }
-        this.len = count;
+        for (i = 0; i < data.length; i++) {
+          this.add(i);
+        };
+
+        this.trigger("items:load");
       },
-      onItemDelete: function(id) {
-        this.collection.removeChild(this.collection.items[id]);
+      onItemDelete: function(i) {
+        this.collection.removeChild(this.collection.items[i]);
       },
-      onItemCreate: function(id) {
-        this.add(id);
+      onItemCreate: function(i) {
+        this.add(i);
       },
-      onItemUpdate: function(id, data) {
-        this.collection.items[id].update(data);
+      onItemUpdate: function(i, data) {
+        this.collection.items[i].update(data);
       },
-      onChange: function(id, data) {
-        if (this.collection.items[id]) {
-          if (data) {
-            this.trigger("item:update", id, data);
-          } else {
-            this.trigger("item:delete", id);
-          }
-        } else {
-          this.trigger("item:create", id);
-        }
+      onChange: function(i, data) {
+        this.trigger("item:update", i, data);
+      },
+      onInsert: function(i) {
+        this.trigger("item:create", i);
+      },
+      onRemove: function(i) {
+        this.trigger("item:delete", i);
       }
     });
   </script>

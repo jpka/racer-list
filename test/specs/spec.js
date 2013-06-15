@@ -1,19 +1,22 @@
 describe("racer-collection", function() {
   var element,
   coll,
-  modelData = {},
+  modelData = {
+    items: [
+      {a: 1},
+      {b: 2}
+    ]
+  },
   Model;
-  modelData[0] = {a: 1};
-  modelData[1] = {b: 2};
 
   beforeEach(function(done) {
     Model = fixtures.window().Model;
     element = fixtures.window().document.querySelector("racer-collection").cloneNode();
     coll = element.collection;
-    element.addEventListener("subscribe", function() {
+    element.on("model:load", function() {
       done();
     });
-    model = element.model = new Model({});
+    model = element.model = new Model({items: []});
   });
 
   it("should have a collection", function() {
@@ -22,43 +25,43 @@ describe("racer-collection", function() {
   });
 
   it("should populate the collection when a model is attached", function(done) {
-    var model = new Model(modelData),
-    key;
+    var model = new Model(modelData);
 
-    element.addEventListener("items:subscribe", function() {
-      expect(coll.childNodes.length).to.equal(2);
-      for (key in modelData) {
-        expect(coll.childNodes[key].child.model).to.equal(modelData[key]);
-      }
+    element.on("model:load", function() {
+      expect(coll.items.length).to.equal(2);
+      modelData.items.forEach(function(data, i) {
+        expect(coll.items[i].child.model).to.equal(data);
+      });
       done();
     });
     element.model = model;
   });
 
-  it("should create a racer-element that wraps around a new element of the designated type when a new document is inserted", function(done) {
+  it("should create a racer-element that wraps around a new element of the designated type when a new document is inserted", function() {
     var wrapper;
-    element.addEventListener("item:subscribe", function() {
-      expect(coll.childNodes.length).to.equal(1);
-      wrapper = coll.firstElementChild;
-      expect(wrapper.nodeName).to.equal("RACER-ELEMENT");
-      expect(wrapper.child.nodeName).to.equal("ELEMENT-WITH-MODEL");
-      expect(wrapper.child.model).to.deep.equal(modelData[0]);
-      done();
-    });
-    element.model.data["0"] = modelData["0"];
-    model.emit("0", "change", modelData["0"]);
+
+    element.model.data.items.push(modelData.items[0]);
+    model.emit("items", "insert", 0, modelData.items[0]);
+
+    expect(coll.items.length).to.equal(1);
+    wrapper = coll.items[0];
+    expect(wrapper.nodeName).to.equal("RACER-ELEMENT");
+    expect(wrapper.child.nodeName).to.equal("ELEMENT-WITH-MODEL");
+    expect(wrapper.child.model).to.deep.equal(modelData.items[0]);
   });
 
   it("should manage when an existing document is replaced", function() {
-    var newModelData = {a: 2, b: 1};
-    element.create(modelData);
-    model.emit("0", "change", newModelData);
-    expect(coll.childNodes[0].child.model).to.deep.equal(newModelData);
+    element.model.data.items.push(modelData.items[0]);
+    element.push(modelData.items[0]);
+    model.emit("items.0", "change", modelData.items[1]);
+    expect(coll.childNodes[0].child.model).to.deep.equal(modelData.items[1]);
   });
 
   it("should delete when the document is deleted", function() {
-    element.create(modelData);
-    model.emit("0", "change");
-    expect(coll.childNodes.length).to.equal(0);
+    element.push(modelData.items[0]);
+    element.push(modelData.items[1]);
+    model.emit("items", "remove", 1);
+    expect(coll.items.length).to.equal(1);
+    expect(coll.items[0].child.model).to.equal(modelData.items[0]);
   });
 });

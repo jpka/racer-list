@@ -16,12 +16,15 @@
       </script>
     </element>
 
-    <racer-collection id="element" itemType="element-with-model" collectionType="span"></racer-collection>
+    <racer-collection id="element" itemType="element-with-model" collectionType="span" at="items"></racer-collection>
     <script>
       window.addEventListener("WebComponentsReady", function() {
-        var data = {};
-        data[0] = {text: "Text1"};
-        data[1] = {text: "Text2"};
+        var data = {
+          items: [
+            {text: "Text1"},
+            {text: "Text2"}
+          ]
+        };
         document.querySelector("#element").model = new Model(data);
       });
     </script>
