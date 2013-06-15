@@ -21,8 +21,14 @@
         }
         return this.child;
       },
-      push: function(model) {
-        var length = this._model.push(this.at, model || {});
+      push: function(item) {
+        this.insertAt(item, this.items.length);
+      },
+      unshift: function(item) {
+        this.insertAt(item, 0);
+      },
+      insertAt: function(model, i) {
+        var length = this._model.insert(this.at, i, model || {});
         this.add(length - 1);
       },
       add: function(i) {
