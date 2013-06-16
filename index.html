@@ -474,15 +474,15 @@ module.exports = {
   </script>
 </element>
 
-<element name="racer-list" extends="racer-element" attributes="collectionType itemType">
+<element name="racer-list" extends="racer-element" attributes="listType itemType reverse">
   <script>
     Polymer.register(this, {
       get items() {
-        return this.collection.items;
+        return this.list.items;
       },
-      get collection() {
+      get list() {
         if (this.child) return this.child;
-        this.child = document.createElement(this.collectionType || "div");
+        this.child = document.createElement(this.listType || "div");
         if (!this.child.insertAt) {
           this.child.insertAt = function(node, i) {
             if (i >= this.items.length) {
@@ -515,7 +515,10 @@ module.exports = {
         wrapper.child = document.createElement(this.itemType);
         wrapper.model = this._model.at(this.at + "." + i);
         wrapper.id = "r-" + i;
-        this.collection.insertAt(wrapper, i);
+        if (this.reverse) {
+          i = this.items.length - i;
+        }
+        this.list.insertAt(wrapper, i);
       },
       onModelLoad: function() {
         var key,
@@ -532,13 +535,13 @@ module.exports = {
         this.trigger("items:load");
       },
       onItemDelete: function(i) {
-        this.collection.removeChild(this.collection.items[i]);
+        this.list.removeChild(this.list.items[i]);
       },
       onItemCreate: function(i) {
         this.add(i);
       },
       onItemUpdate: function(i, data) {
-        this.collection.items[i].update(data);
+        this.list.items[i].update(data);
       },
       onChange: function(i, data) {
         this.trigger("item:update", i, data);
