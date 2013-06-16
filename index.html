@@ -73,6 +73,10 @@ module.exports = {
   get model() {
     return this._model;
   },
+  del: function(path) {
+    if (this.at) path = this.at + "." + path;
+    this._model.del(path);
+  },
   listen: function() {
     var self = this;
     this._model.on("all", "**", function(path, ev, data, oldData) {
@@ -483,8 +487,8 @@ module.exports = {
       get list() {
         if (this.child) return this.child;
         this.child = document.createElement(this.listType || "div");
-        if (!this.child.insertAt) {
-          this.child.insertAt = function(node, i) {
+        if (!this.child.insert) {
+          this.child.insert = function(i, node) {
             if (i >= this.items.length) {
               this.appendChild(node);
             } else {
@@ -498,12 +502,12 @@ module.exports = {
         return this.child;
       },
       push: function(item) {
-        this.insertAt(item, this.items.length);
+        this.insert(this.items.length, item);
       },
       unshift: function(item) {
-        this.insertAt(item, 0);
+        this.insert(0, item);
       },
-      insertAt: function(model, i) {
+      insert: function(i, model) {
         var length = this._model.insert(this.at, i, model || {});
         this.add(length - 1);
       },
@@ -518,7 +522,7 @@ module.exports = {
         if (this.reverse) {
           i = this.items.length - i;
         }
-        this.list.insertAt(wrapper, i);
+        this.list.insert(i, wrapper);
       },
       onModelLoad: function() {
         var key,

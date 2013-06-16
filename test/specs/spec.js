@@ -92,5 +92,4 @@ describe("racer-list", function() {
     expect(list.items.length).to.equal(1);
     expect(list.items[0].child.model).to.equal(modelData.items[0]);
   });
-
 });
