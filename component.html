@@ -1,30 +1,11 @@
-<element name="racer-list" extends="racer-element" attributes="listType itemType at reverse itemAttributes">
+<element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes">
+  <template>
+    <smart-list id="list"></smart-list>
+  </template>
   <script>
     Polymer.register(this, {
       get items() {
-        return this.list.items;
-      },
-      get list() {
-        if (this.child) return this.child;
-        this.child = document.createElement(this.listType || "div");
-        if (!this.child.insert) {
-          this.child.insert = function(i, node) {
-            if (i >= this.items.length) {
-              this.appendChild(node);
-            } else {
-              this.insertBefore(node, this.items[i]);
-            }
-          };
-        }
-        if (!this.child.items) {
-          this.child.items = this.child.children;
-        }
-        if (!this.child.removeByIndex) {
-          this.child.removeByIndex = function(i) {
-            this.removeChild(this.items[i]);
-          };
-        }
-        return this.child;
+        return this.$.list.items;
       },
       push: function(item) {
         this.insert(this.items.length, item);
@@ -33,7 +14,7 @@
         this.insert(0, item);
       },
       insert: function(i, model) {
-        var length = this._model.insert(this.at, i, model || {});
+        this._model.insert(this.at, i, model || {});
       },
       del: function(i) {
         this._model.del(this.at, i, 1);
@@ -45,7 +26,6 @@
         if (!this.itemType) throw new Error("itemType was not declared");
         wrapper.child = document.createElement(this.itemType);
         wrapper.model = this._model.at(this.at + "." + i);
-        wrapper.id = "r-" + i;
         if (this.itemAttributes) {
           for (attr in this.itemAttributes) {
             wrapper.child[attr] = this.itemAttributes[attr];
@@ -54,7 +34,8 @@
         if (this.reverse) {
           i = this.items.length - i;
         }
-        this.list.insert(i, wrapper);
+        wrapper.id = "r-" + i;
+        this.$.list.insert(i, wrapper);
       },
       onModelLoad: function() {
         var key,
@@ -71,13 +52,13 @@
         this.trigger("items:load");
       },
       onItemDelete: function(i) {
-        this.list.removeByIndex(i);
+        this.$.list.removeByIndex(i);
       },
       onItemCreate: function(i) {
         this.add(i);
       },
       onItemUpdate: function(i, data) {
-        this.list.items[i].update(data);
+        this.$.list.items[i].update(data);
       },
       onChange: function(i, data) {
         this.trigger("item:update", i, data);

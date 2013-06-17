@@ -12,7 +12,7 @@ describe("racer-list", function() {
   beforeEach(function(done) {
     Model = fixtures.window().Model;
     element = fixtures.window().document.querySelector("racer-list").cloneNode();
-    list = element.list;
+    list = element.$.list;
     element.on("model:load", function() {
       done();
     });
@@ -21,16 +21,15 @@ describe("racer-list", function() {
 
   it("should have a list", function() {
     expect(list).to.exist;
-    expect(list.nodeName).to.equal("SPAN");
   });
 
   it("should populate the list when a model is attached", function(done) {
     var model = new Model(modelData);
 
     element.on("model:load", function() {
-      expect(list.items.length).to.equal(2);
+      expect(element.items.length).to.equal(2);
       modelData.items.forEach(function(data, i) {
-        expect(list.items[i].child.model).to.equal(data);
+        expect(element.items[i].child.model).to.equal(data);
       });
       done();
     });
@@ -82,7 +81,7 @@ describe("racer-list", function() {
     element.model.data.items.push(modelData.items[0]);
     element.push(modelData.items[0]);
     model.emit("items.0", "change", modelData.items[1]);
-    expect(list.childNodes[0].child.model).to.deep.equal(modelData.items[1]);
+    expect(list.items[0].child.model).to.deep.equal(modelData.items[1]);
   });
 
   it("should delete when the document is deleted", function() {
