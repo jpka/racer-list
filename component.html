@@ -34,11 +34,9 @@
       },
       insert: function(i, model) {
         var length = this._model.insert(this.at, i, model || {});
-        this.add(length - 1);
       },
       del: function(i) {
         this._model.del(this.at, i, 1);
-        this.list.removeByIndex(i);
       },
       add: function(i) {
         var wrapper = document.createElement("racer-element"),
@@ -73,7 +71,7 @@
         this.trigger("items:load");
       },
       onItemDelete: function(i) {
-        this.list.removeChild(this.list.items[i]);
+        this.list.removeByIndex(i);
       },
       onItemCreate: function(i) {
         this.add(i);

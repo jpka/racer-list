@@ -41,8 +41,7 @@ window.Model = function(modelData, populated) {
       this.data[path] = value;
     },
     push: function(path, model) {
-      this.digIn(path).push(model);
-      return this.digIn(path).length;
+      return this.insert(path, this.digIn(path).length, model);
     },
     insert: function(path, i, model) {
       var stuff = this.digIn(path);
@@ -51,6 +50,7 @@ window.Model = function(modelData, populated) {
       } else {
         stuff.splice(i, 0, model)
       }
+      this.emit(path, "insert", i, model);
       return stuff.length;
     },
     del: function() {

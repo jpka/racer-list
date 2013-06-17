@@ -96,7 +96,6 @@ describe("racer-list", function() {
   it("should have a del method for deleting from the model", function() {
     element.push(modelData.items[0]);
     element.del(0);
-    expect(list.items.length).to.equal(0);
     expect(model.delWasCalledWith).to.deep.equal(["items", 0, 1]);
   });
 });
