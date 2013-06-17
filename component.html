@@ -1,4 +1,4 @@
-<element name="racer-list" extends="racer-element" attributes="listType itemType reverse">
+<element name="racer-list" extends="racer-element" attributes="listType itemType at reverse itemAttributes">
   <script>
     Polymer.register(this, {
       get items() {
@@ -19,6 +19,11 @@
         if (!this.child.items) {
           this.child.items = this.child.children;
         }
+        if (!this.child.removeByIndex) {
+          this.child.removeByIndex = function(i) {
+            this.removeChild(this.items[i]);
+          };
+        }
         return this.child;
       },
       push: function(item) {
@@ -31,14 +36,23 @@
         var length = this._model.insert(this.at, i, model || {});
         this.add(length - 1);
       },
+      del: function(i) {
+        this._model.del(this.at, i, 1);
+        this.list.removeByIndex(i);
+      },
       add: function(i) {
         var wrapper = document.createElement("racer-element"),
-        self = this;
+        attr;
 
         if (!this.itemType) throw new Error("itemType was not declared");
         wrapper.child = document.createElement(this.itemType);
         wrapper.model = this._model.at(this.at + "." + i);
         wrapper.id = "r-" + i;
+        if (this.itemAttributes) {
+          for (attr in this.itemAttributes) {
+            wrapper.child[attr] = this.itemAttributes[attr];
+          }
+        }
         if (this.reverse) {
           i = this.items.length - i;
         }

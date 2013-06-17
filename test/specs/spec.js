@@ -92,4 +92,11 @@ describe("racer-list", function() {
     expect(list.items.length).to.equal(1);
     expect(list.items[0].child.model).to.equal(modelData.items[0]);
   });
+
+  it("should have a del method for deleting from the model", function() {
+    element.push(modelData.items[0]);
+    element.del(0);
+    expect(list.items.length).to.equal(0);
+    expect(model.delWasCalledWith).to.deep.equal(["items", 0, 1]);
+  });
 });

@@ -4,6 +4,7 @@ window.Model = function(modelData, populated) {
     digIn: function(path) {
       var data = this.data;
       path.split(".").forEach(function(key) {
+        if (!data) return;
         data = data[key];
       });
       return data;
@@ -51,6 +52,9 @@ window.Model = function(modelData, populated) {
         stuff.splice(i, 0, model)
       }
       return stuff.length;
+    },
+    del: function() {
+      this.delWasCalledWith = arguments;
     }
   };
 
