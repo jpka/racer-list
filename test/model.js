@@ -1,7 +1,7 @@
 window.Model = function(modelData, populated) {
   var model = {
     events: {},
-    digIn: function(path) {
+    digIn: function(path, value) {
       var data = this.data;
       path.split(".").forEach(function(key) {
         if (!data) return;
@@ -38,7 +38,11 @@ window.Model = function(modelData, populated) {
       return new Model(this.digIn(path), true);
     },
     set: function(path, value) {
-      this.data[path] = value;
+      var pathArr = path.split("."),
+      key = pathArr.pop();
+
+      this.digIn(pathArr.join("."))[key] = value;
+      this.emit(path, "change", value);
     },
     push: function(path, model) {
       return this.insert(path, this.digIn(path).length, model);
