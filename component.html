@@ -33,10 +33,15 @@
         return this.$.list.items;
       },
       push: function(item) {
+        var length = this.items.length;
+
         if (this._isArray) {
           this.insert(this.items.length, item);
         } else {
-          this.set(this.items.length, item);
+          while (this._model.get(this.at + "." + length)) {
+            length += 1;
+          }
+          this.set(length, item);
         }
       },
       unshift: function(item) {
@@ -98,6 +103,7 @@
         if (this._isArray) {
           ev = "update";
         } else {
+          if (key.indexOf(".") > -1) return;
           if (data) {
             if (this.get(key)) {
               ev = "update";
@@ -119,4 +125,4 @@
       }
     });
   </script>
-  </element>
+</element>
