@@ -3,6 +3,7 @@ window.Model = function(modelData, populated) {
     events: {},
     digIn: function(path, value) {
       var data = this.data;
+      if (!path) return data;
       path.split(".").forEach(function(key) {
         if (!data) return;
         data = data[key];
@@ -40,7 +41,7 @@ window.Model = function(modelData, populated) {
     set: function(path, value) {
       var pathArr = path.split("."),
       key = pathArr.pop();
-
+      
       this.digIn(pathArr.join("."))[key] = value;
       this.emit(path, "change", value);
     },

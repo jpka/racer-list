@@ -4,7 +4,7 @@ describe("Objects", function() {
   modelData = {
     items: {
       a: {a: 1},
-      b: {b: 2}
+      b: {a: 2}
     }
   },
   Model;
@@ -22,8 +22,8 @@ describe("Objects", function() {
   it("should populate the list when a model is attached", function(done) {
     element.on("model:load", function() {
       expect(element.items.length).to.equal(2);
-      expect(list.items[0].child.a).to.equal(modelData.items["a"].a);
-      expect(list.items[1].child.b).to.equal(modelData.items["b"].b);
+      expect(list.items[0].child.model.a).to.equal(modelData.items["a"].a);
+      expect(list.items[1].child.model.a).to.equal(modelData.items["b"].a);
       done();
     });
     element.model = new Model(modelData);
@@ -33,8 +33,8 @@ describe("Objects", function() {
     element.reverse = true;
 
     element.on("model:load", function() {
-      expect(list.items[0].child.b).to.equal(modelData.items["b"].b);
-      expect(list.items[1].child.a).to.equal(modelData.items["a"].a);
+      expect(list.items[0].child.model.a).to.equal(modelData.items["b"].a);
+      expect(list.items[1].child.model.a).to.equal(modelData.items["a"].a);
       done();
     });
     element.model = new Model(modelData);
@@ -55,7 +55,7 @@ describe("Objects", function() {
       wrapper = list.items[1];
       expect(wrapper.nodeName).to.equal("RACER-ELEMENT");
       expect(wrapper.child.nodeName).to.equal("ELEMENT-WITH-MODEL");
-      expect(wrapper.child.b).to.deep.equal(modelData.items["b"].b);
+      expect(wrapper.child.model.a).to.deep.equal(modelData.items["b"].a);
     });
 
     it("should manage when a document is appended in reverse mode", function() {
@@ -64,7 +64,7 @@ describe("Objects", function() {
       element.model.emit("items.b", "change", modelData.items["b"]);
 
       expect(list.items.length).to.equal(2);
-      expect(list.items[0].child.b).to.deep.equal(modelData.items["b"].b);
+      expect(list.items[0].child.model.a).to.deep.equal(modelData.items["b"].a);
     });
   });
 
@@ -72,7 +72,7 @@ describe("Objects", function() {
     element.set("a", modelData.items["a"]);
     element.model.data.items.a = modelData.items["b"];
     model.emit("items.a", "change", modelData.items["b"]);
-    expect(list.items[0].child.b).to.deep.equal(modelData.items["b"].b);
+    expect(list.items[0].child.model.a).to.deep.equal(modelData.items["b"].a);
   });
 
   it("should delete when the document is deleted", function() {
@@ -80,7 +80,7 @@ describe("Objects", function() {
     element.set("b", modelData.items["b"]);
     model.emit("items.b", "change");
     expect(list.items.length).to.equal(1);
-    expect(list.items[0].child.a).to.equal(modelData.items["a"].a);
+    expect(list.items[0].child.model.a).to.equal(modelData.items["a"].a);
   });
 
   it("deleting deletes only one item", function() {

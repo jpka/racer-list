@@ -5,26 +5,20 @@
     <script src="/base/node_modules/Polymer/polymer.min.js"></script>
     <script src="/base/test/model.js"></script>
     <link rel="import" href="/base/index.html"/>
+    <link rel="import" href="/base/test/elementWithModel.html"/>
   </head>
   <body>
-    <element name="element-with-model">
-      <template>
-        <div>{{model.text}}</div>
-      </template>
-      <script>
-        Polymer.register(this, {model: {}});
-      </script>
-    </element>
-
     <racer-list id="element" itemType="element-with-model" at="items"></racer-list>
+    <element-with-model id="a"></element-with-model>
+    <element-with-model id="b"></element-with-model>
     <script>
       window.addEventListener("WebComponentsReady", function() {
         var data = {
-          items: [
-            {text: "Text1"},
-            {text: "Text2"}
-          ]
+          items: {
+          }
         };
+        data.items[0] = {text: "Text1"};
+        data.items[1] = {text: "Text2"};
         document.querySelector("#element").model = new Model(data);
       });
     </script>
