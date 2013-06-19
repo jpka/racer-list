@@ -4,6 +4,7 @@
   "main": "index.html",
   "dependencies": {
     "racer-element": "~0.0.0"
+    "smart-list": "~0.0.0"
   },
   "ignore": [
     "**/.*",
