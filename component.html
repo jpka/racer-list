@@ -104,12 +104,8 @@
           ev = "update";
         } else {
           if (key.indexOf(".") > -1) return;
-          if (data) {
-            if (this.get(key)) {
-              ev = "update";
-            } else {
-              ev = "create";
-            }
+          if (data && this.get(key)) {
+            ev = "update";
           } else {
             ev = "delete";
           }
@@ -117,11 +113,20 @@
 
         this.trigger("item:" + ev, key, data);
       },
+      onLoad: function(key) {
+        if (this._isArray) return;
+        this.trigger("item:create", key);
+      },
       onInsert: function(i) {
         this.trigger("item:create", i);
       },
       onRemove: function(i) {
         this.trigger("item:delete", i);
+      },
+      reset: function() {
+        this.items.forEach(function(item) {
+          item.reset();
+        });
       }
     });
   </script>

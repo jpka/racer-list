@@ -50,6 +50,7 @@ describe("Objects", function() {
 
       element.model.data.items.b = modelData.items["b"];
       element.model.emit("items.b", "change", modelData.items["b"]);
+      element.model.emit("items.b", "load", modelData.items["b"]);
 
       expect(list.items.length).to.equal(2);
       wrapper = list.items[1];
@@ -62,6 +63,7 @@ describe("Objects", function() {
       element.reverse = true;
       element.model.data.items.b = modelData.items["b"];
       element.model.emit("items.b", "change", modelData.items["b"]);
+      element.model.emit("items.b", "load", modelData.items["b"]);
 
       expect(list.items.length).to.equal(2);
       expect(list.items[0].child.model.a).to.deep.equal(modelData.items["b"].a);

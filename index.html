@@ -39,10 +39,16 @@
         return this.$.container.querySelector("#" + id);
       },
       rm: function(id) {
-        this.$.container.removeChild(this.get(id));
+        var el = this.get(id);
+        if (el) {
+          this.$.container.removeChild(el);
+        }
       },
       rmByIndex: function(index) {
-        this.$.container.removeChild(this.items[index]);
+        var el = this.items[index];
+        if (el) {
+          this.$.container.removeChild(el);
+        }
       }
     });
   </script>
@@ -128,8 +134,6 @@ module.exports = {
       if (!this.child.model) this.child.model = {};
     }
 
-    if (!this.turbo) this.child.addEventListener("save", this.save.bind(this));
-
     this.listen();
 
     if (model.get(this.at)) {
@@ -143,20 +147,38 @@ module.exports = {
   get model() {
     return this._model;
   },
+  resolve: function(path) {
+    var resolved = [];
+    if (this.at) resolved.push(this.at);
+    if (path) resolved.push(path);
+    return resolved.join(".");
+  },
   del: function(path) {
-    if (this.at) path = this.at + "." + path;
-    this._model.del(path);
+    this._model.del(this.resolve(path));
+    this.fire("delete");
   },
   set: function(key, value) {
-    this._model.set(this.at ? this.at + "." + key : key, value);
+    this._model.set(this.resolve(key), value);
   },
   listen: function() {
     var self = this;
+
+    if (!this.turbo) {
+      this.child.addEventListener("save", function(e) {
+        e.stopPropagation();
+        self.save();
+      });
+    }
+    this.child.addEventListener("delete", function(e) {
+      e.stopPropagation();
+      self.del();
+    });
+
     this._model.on("all", "**", function(path, ev, data, oldData) {
       var args = [ev, path, data, oldData];
 
       if (self.at && self.at !== "") {
-        if (path.indexOf(self.at) === -1) return;
+        if (path.indexOf(self.at) !== 0) return;
         if (path === self.at) {
           args.splice(1, 1);
         } else {
@@ -185,6 +207,10 @@ module.exports = {
     for (key in this._childModel) {
       this.set(key, this._childModel[key]);
     }
+    this.fire("save");
+  },
+  reset: function() {
+    this.child.model = this._model.get(this.at);
   },
   onModelLoad: function() {
     this.update();
@@ -308,12 +334,8 @@ module.exports = {
           ev = "update";
         } else {
           if (key.indexOf(".") > -1) return;
-          if (data) {
-            if (this.get(key)) {
-              ev = "update";
-            } else {
-              ev = "create";
-            }
+          if (data && this.get(key)) {
+            ev = "update";
           } else {
             ev = "delete";
           }
@@ -321,11 +343,20 @@ module.exports = {
 
         this.trigger("item:" + ev, key, data);
       },
+      onLoad: function(key) {
+        if (this._isArray) return;
+        this.trigger("item:create", key);
+      },
       onInsert: function(i) {
         this.trigger("item:create", i);
       },
       onRemove: function(i) {
         this.trigger("item:delete", i);
+      },
+      reset: function() {
+        this.items.forEach(function(item) {
+          item.reset();
+        });
       }
     });
   </script>
