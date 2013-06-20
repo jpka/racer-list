@@ -2,13 +2,13 @@
   "name": "racer-list",
   "version": "0.0.0",
   "main": "index.html",
-  "dependencies": {
-    "racer-element": "~0.0.0"
-    "smart-list": "~0.0.0"
-  },
   "ignore": [
     "**/.*",
     "node_modules",
     "components"
-  ]
+  ],
+  "devDependencies": {
+    "racer-element": "latest",
+    "smart-list": "latest"
+  }
 }
