@@ -114,7 +114,7 @@
         this.trigger("item:" + ev, key, data);
       },
       onLoad: function(key) {
-        if (this._isArray) return;
+        if (this._isArray || this.get(key)) return;
         this.trigger("item:create", key);
       },
       onInsert: function(i) {
