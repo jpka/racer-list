@@ -9,6 +9,7 @@
   ],
   "devDependencies": {
     "racer-element": "latest",
-    "smart-list": "latest"
+    "smart-list": "latest",
+    "polymer": "latest"
   }
 }

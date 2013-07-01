@@ -1,20 +1,11 @@
 <element name="smart-list">
   <template>
-    <style>
-      @host {}
-    </style>  
-    <div id="container"></div>
+    <content></content>
   </template>
   <script>
     Polymer.register(this, {
-      ready: function() {
-        var self = this;
-        this.children.forEach(function(node) {
-          self.$.container.appendChild(node);
-        });
-      },
       get items() {
-        return this.$.container.childNodes;
+        return this.children;
       },
       push: function(node, props) {
         this.insert(this.items.length, node, props);
@@ -29,25 +20,39 @@
             node[prop] = props[prop];
           }
         }
+
         if (i >= this.items.length) {
-          this.$.container.appendChild(node);
+          this.appendChild(node);
         } else {
-          this.$.container.insertBefore(node, this.items[i]);
+          this.insertBefore(node, this.items[i]);
         }
+
+        this.showItem(i);
+      },
+      showItem: function(i) {
+        var node = this.items[i];
+
+        node.style["z-index"] = -i;
+        node.style.position = "relative";
+        node.style["margin-top"] = (-parseInt(node.clientHeight, 10)) + "px";
+        setTimeout(function() {
+          node.style.transition = "margin-top 1s";
+          node.style["margin-top"] = "0px";
+        }, 0);
       },
       get: function(id) {
-        return this.$.container.querySelector("#" + id);
+        return this.querySelector("#" + id);
       },
       rm: function(id) {
         var el = this.get(id);
         if (el) {
-          this.$.container.removeChild(el);
+          this.removeChild(el);
         }
       },
       rmByIndex: function(index) {
         var el = this.items[index];
         if (el) {
-          this.$.container.removeChild(el);
+          this.removeChild(el);
         }
       }
     });
@@ -56,36 +61,10 @@
 
 <element name="racer-element" attributes="at">
   <template>
-    <style>
-      @host {}
-    </style>  
-    <div id="container"></div>
+    <content></content>
   </template>
   <script>
-    require=(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({"proto":[function(require,module,exports){
-module.exports=require('KQcwdn');
-},{}],"KQcwdn":[function(require,module,exports){
-function observeChildModelProperty(self, key) {
-  Object.defineProperty(self.child.model, key, {
-    set: function(value) {
-      if (this.turbo) {
-        self.set(key, value);
-      }
-      self._childModel[key] = value;
-    },
-    get: function() {
-      return self._childModel[key];
-    }
-  });
-}
-
-module.exports = {
-  ready: function() {
-    if (this.firstElementChild) {
-      this.child = this.firstElementChild;
-    }
-    this._childModel = {};
-  },
+    Polymer.register(this, {
   trigger: function() {
     var name = arguments[0],
     data = [].slice.call(arguments, 1),
@@ -107,17 +86,15 @@ module.exports = {
     });
   },
   set child(element) {
-    var container = this.$.container;
-
-    while (container.firstElementChild) {
-      container.removeChild(container.firstElementChild);
+    while (this.firstElementChild) {
+      this.removeChild(this.firstElementChild);
     }
-    this.$.container.appendChild(element);
+    this.appendChild(element);
 
     this.update();
   },
   get child() {
-    return this.$.container.firstElementChild;
+    return this.firstElementChild;
   },
   set racer(racer) {
     var self = this;
@@ -151,7 +128,7 @@ module.exports = {
     var resolved = [];
     if (this.at) resolved.push(this.at);
     if (path) resolved.push(path);
-    return resolved.join(".");
+    return resolved.length > 0 ? resolved.join(".") : null;
   },
   del: function(path) {
     this._model.del(this.resolve(path));
@@ -160,18 +137,24 @@ module.exports = {
   set: function(key, value) {
     this._model.set(this.resolve(key), value);
   },
+  onChildSave: function() {
+    this.save();
+  },
+  onChildDelete: function() {
+    this.del();
+  },
   listen: function() {
     var self = this;
 
     if (!this.turbo) {
       this.child.addEventListener("save", function(e) {
         e.stopPropagation();
-        self.save();
+        self.onChildSave();
       });
     }
     this.child.addEventListener("delete", function(e) {
       e.stopPropagation();
-      self.del();
+      self.onChildDelete();
     });
 
     this._model.on("all", "**", function(path, ev, data, oldData) {
@@ -196,16 +179,13 @@ module.exports = {
     data = data || this._model.get();
 
     for (key in data) {
-      if (!this._childModel[key]) {
-        observeChildModelProperty(self, key);
-      }
-      this._childModel[key] = data[key];
+      this.child.model[key] = data[key];
     }
   },
   save: function() {
     var key;
-    for (key in this._childModel) {
-      this.set(key, this._childModel[key]);
+    for (key in this.child.model) {
+      this.set(key, this.child.model[key]);
     }
     this.fire("save");
   },
@@ -217,50 +197,50 @@ module.exports = {
   },
   onChange: function(name, value) {
     if (!this.child) return;
-    this._childModel[name] = value;
+    this.child.model[name] = value;
   }
-};
+});
 
-},{}]},{},[])
-;
-
-    Polymer.register(this, require("proto"));
   </script>
 </element>
 
 <element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes">
-  <template>
-    <smart-list id="list"></smart-list>
-  </template>
   <script>
-    function add(self, key) {
-      var wrapper = document.createElement("racer-element"),
-      attr;
-
-      if (!self.itemType) throw new Error("itemType was not declared");
-      wrapper.child = document.createElement(self.itemType);
-      wrapper.model = self._model.at(self.at + "." + key);
-      if (self.itemAttributes) {
-        for (attr in self.itemAttributes) {
-          wrapper.child[attr] = self.itemAttributes[attr];
-        }
-      }
-
-      wrapper.id = "r-" + key;
-
-      if (self._isArray) {
-        if (self.reverse) {
-          key = self.items.length - key;
-        }
-        self.$.list.insert(key, wrapper);
-      } else {
-        self.$.list[self.reverse ? "unshift" : "push"](wrapper);
-      }
-    }
-
     Polymer.register(this, {
+      _authoredLocally: {},
+
+      ready: function() {
+        this.appendChild(document.createElement("smart-list"));
+      },
+      get list() {
+        return this.child;
+      },
       get items() {
-        return this.$.list.items;
+        return this.list.items;
+      },
+      add: function(key) {
+        var wrapper = document.createElement("racer-element"),
+        attr;
+
+        if (!this.itemType) throw new Error("itemType was not declared");
+        wrapper.child = document.createElement(this.itemType);
+        wrapper.model = this._model.at(this.at + "." + key);
+        if (this.itemAttributes) {
+          for (attr in this.itemAttributes) {
+            wrapper.child[attr] = this.itemAttributes[attr];
+          }
+        }
+
+        wrapper.id = "r-" + key;
+
+        if (this._isArray) {
+          if (this.reverse) {
+            key = this.items.length - key;
+          }
+          this.list.insert(key, wrapper);
+        } else {
+          this.list[this.reverse ? "unshift" : "push"](wrapper);
+        }
       },
       push: function(item) {
         var length = this.items.length;
@@ -280,13 +260,15 @@ module.exports = {
       },
       insert: function(i, model) {
         if (!this._isArray) throw new Error("Can't insert on an object!");
+        this._authoredLocally[i] = true;
         this._model.insert(this.at, i, model || {});
       },
-      set: function(key, value) {
-        this._model.set(this.at + "." + key, value);
+      set: function(key, model) {
+        this._authoredLocally[key] = true;
+        this._model.set(this.at + "." + key, model);
       },
       get: function(id) {
-        return this.$.list.get("r-" + id);
+        return this.list.get("r-" + id);
       },
       del: function(key) {
         if (this._isArray) {
@@ -305,23 +287,29 @@ module.exports = {
 
         this._isArray = Array.isArray(data);
 
-        Object.keys(data).forEach(function(key) {
-          add(self, key);
-        });
+        if (data) {
+          Object.keys(data).forEach(function(key) {
+            self.add(key);
+          });
+        }
 
         this.trigger("items:load");
       },
       onItemDelete: function(key) {
-        this.$.list.rm("r-" + key);
+        this._authoredLocally[key] = false;
+        this.list.rm("r-" + key);
       },
       onItemCreate: function(key) {
-        add(this, key);
+        this.add(key);
+      },
+      onForeignItemCreate: function(key) {
+        this.add(key);
       },
       onItemUpdate: function(key, data) {
         var item;
 
         if (this._isArray) {
-          item = this.$.list.items[key];
+          item = this.list.items[key];
         } else {
           item = this.get(key);
         }
@@ -334,8 +322,12 @@ module.exports = {
           ev = "update";
         } else {
           if (key.indexOf(".") > -1) return;
-          if (data && this.get(key)) {
-            ev = "update";
+          if (data) {
+            if (this.get(key)) {
+              ev = "update";
+            } else {
+              return; //create will be catched by load.
+            }
           } else {
             ev = "delete";
           }
@@ -344,8 +336,12 @@ module.exports = {
         this.trigger("item:" + ev, key, data);
       },
       onLoad: function(key) {
+        var ev = "item:create";
         if (this._isArray || this.get(key)) return;
-        this.trigger("item:create", key);
+        if (!this._authoredLocally[key]) {
+          ev = "foreign:" + ev;
+        }
+        this.trigger(ev, key);
       },
       onInsert: function(i) {
         this.trigger("item:create", i);

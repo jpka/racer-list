@@ -12,7 +12,7 @@ describe("Arrays", function() {
   beforeEach(function(done) {
     Model = fixtures.window().Model;
     element = fixtures.window().document.querySelector("racer-list").cloneNode();
-    list = element.$.list;
+    list = element.list;
     element.on("model:load", function() {
       done();
     });

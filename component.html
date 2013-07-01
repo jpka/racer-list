@@ -1,36 +1,40 @@
 <element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes">
-  <template>
-    <smart-list id="list"></smart-list>
-  </template>
   <script>
-    function add(self, key) {
-      var wrapper = document.createElement("racer-element"),
-      attr;
-
-      if (!self.itemType) throw new Error("itemType was not declared");
-      wrapper.child = document.createElement(self.itemType);
-      wrapper.model = self._model.at(self.at + "." + key);
-      if (self.itemAttributes) {
-        for (attr in self.itemAttributes) {
-          wrapper.child[attr] = self.itemAttributes[attr];
-        }
-      }
-
-      wrapper.id = "r-" + key;
-
-      if (self._isArray) {
-        if (self.reverse) {
-          key = self.items.length - key;
-        }
-        self.$.list.insert(key, wrapper);
-      } else {
-        self.$.list[self.reverse ? "unshift" : "push"](wrapper);
-      }
-    }
-
     Polymer.register(this, {
+      _authoredLocally: {},
+
+      ready: function() {
+        this.appendChild(document.createElement("smart-list"));
+      },
+      get list() {
+        return this.child;
+      },
       get items() {
-        return this.$.list.items;
+        return this.list.items;
+      },
+      add: function(key) {
+        var wrapper = document.createElement("racer-element"),
+        attr;
+
+        if (!this.itemType) throw new Error("itemType was not declared");
+        wrapper.child = document.createElement(this.itemType);
+        wrapper.model = this._model.at(this.at + "." + key);
+        if (this.itemAttributes) {
+          for (attr in this.itemAttributes) {
+            wrapper.child[attr] = this.itemAttributes[attr];
+          }
+        }
+
+        wrapper.id = "r-" + key;
+
+        if (this._isArray) {
+          if (this.reverse) {
+            key = this.items.length - key;
+          }
+          this.list.insert(key, wrapper);
+        } else {
+          this.list[this.reverse ? "unshift" : "push"](wrapper);
+        }
       },
       push: function(item) {
         var length = this.items.length;
@@ -50,13 +54,15 @@
       },
       insert: function(i, model) {
         if (!this._isArray) throw new Error("Can't insert on an object!");
+        this._authoredLocally[i] = true;
         this._model.insert(this.at, i, model || {});
       },
-      set: function(key, value) {
-        this._model.set(this.at + "." + key, value);
+      set: function(key, model) {
+        this._authoredLocally[key] = true;
+        this._model.set(this.at + "." + key, model);
       },
       get: function(id) {
-        return this.$.list.get("r-" + id);
+        return this.list.get("r-" + id);
       },
       del: function(key) {
         if (this._isArray) {
@@ -75,23 +81,29 @@
 
         this._isArray = Array.isArray(data);
 
-        Object.keys(data).forEach(function(key) {
-          add(self, key);
-        });
+        if (data) {
+          Object.keys(data).forEach(function(key) {
+            self.add(key);
+          });
+        }
 
         this.trigger("items:load");
       },
       onItemDelete: function(key) {
-        this.$.list.rm("r-" + key);
+        this._authoredLocally[key] = false;
+        this.list.rm("r-" + key);
       },
       onItemCreate: function(key) {
-        add(this, key);
+        this.add(key);
+      },
+      onForeignItemCreate: function(key) {
+        this.add(key);
       },
       onItemUpdate: function(key, data) {
         var item;
 
         if (this._isArray) {
-          item = this.$.list.items[key];
+          item = this.list.items[key];
         } else {
           item = this.get(key);
         }
@@ -104,8 +116,12 @@
           ev = "update";
         } else {
           if (key.indexOf(".") > -1) return;
-          if (data && this.get(key)) {
-            ev = "update";
+          if (data) {
+            if (this.get(key)) {
+              ev = "update";
+            } else {
+              return; //create will be catched by load.
+            }
           } else {
             ev = "delete";
           }
@@ -114,8 +130,12 @@
         this.trigger("item:" + ev, key, data);
       },
       onLoad: function(key) {
+        var ev = "item:create";
         if (this._isArray || this.get(key)) return;
-        this.trigger("item:create", key);
+        if (!this._authoredLocally[key]) {
+          ev = "foreign:" + ev;
+        }
+        this.trigger(ev, key);
       },
       onInsert: function(i) {
         this.trigger("item:create", i);
