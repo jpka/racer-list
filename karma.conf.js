@@ -12,12 +12,13 @@ files = [
   MOCHA_ADAPTER,
   'components/polymer/polymer.min.js',
   'node_modules/chai/chai.js',
-  {pattern: 'index.html', watched: true, served: true, included: false},
+  {pattern: 'test-index.html', watched: true, served: true, included: false},
   {pattern: 'test/index.html', watched: true, served: true, included: false},
   'node_modules/js-fixtures/fixtures.js',
   'test/setup.js',
   {pattern: 'test/model.js', watched: true, served: true, included: false},
   {pattern: 'test/elementWithModel.html', watched: true, served: true, included: false},
+  {pattern: 'components/**/index.html', watched: true, served: true, included: false},
   'test/specs/**/*.js'
 ];
 

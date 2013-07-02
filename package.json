@@ -10,9 +10,10 @@
     "karma": "~0.8.5",
     "js-fixtures": "~1.2.0",
     "chai": "~1.6.0",
-    "grunt-contrib-concat": "~0.3.0",
     "grunt": "~0.4.1",
-    "grunt-contrib-watch": "~0.4.4"
+    "grunt-contrib-watch": "~0.4.4",
+    "uglify-js": "~2.3.6",
+    "grunt-replace": "~0.4.4"
   },
   "scripts": {
     "test": "node_modules/.bin/karma start"
