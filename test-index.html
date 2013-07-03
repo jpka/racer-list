@@ -1,0 +1,12 @@
+<link rel="import" href="/base/components/racer-element/index.html"/>
+<link rel="import" href="/base/components/smart-list/index.html"/>
+<element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes">
+  <style polymer-scope="global">
+    racer-element {
+      display: block;
+    }
+  </style>
+  <script>
+    Polymer.register(this,{_authoredLocally:{},ready:function(){this.appendChild(document.createElement("smart-list"))},get list(){return this.child},get items(){return this.list.items},add:function(t){var e,i=document.createElement("racer-element");if(!this.itemType)throw new Error("itemType was not declared");if(i.child=document.createElement(this.itemType),i.model=this._model.at(this.at+"."+t),this.itemAttributes)for(e in this.itemAttributes)i.child[e]=this.itemAttributes[e];i.id="r-"+t,this._isArray?(this.reverse&&(t=this.items.length-t),this.list.insert(t,i)):this.list[this.reverse?"unshift":"push"](i)},push:function(t){var e=this.items.length;if(this._isArray)this.insert(this.items.length,t);else{for(;this._model.get(this.at+"."+e);)e+=1;this.set(e,t)}},unshift:function(t){if(!this._isArray)throw new Error("Can't unshift on an object!");this.insert(0,t)},insert:function(t,e){if(!this._isArray)throw new Error("Can't insert on an object!");this._authoredLocally[t]=!0,this._model.insert(this.at,t,e||{})},set:function(t,e){this._authoredLocally[t]=!0,this._model.set(this.at+"."+t,e)},get:function(t){return this.list.get("r-"+t)},del:function(t){this._isArray?this._model.del(this.at,t,1):this._model.del(this.at+"."+t)},onModelLoad:function(){var t,e=this;if(!this.at)throw new Error("at attribute must be specified");t=this._model.get(this.at),this._isArray=Array.isArray(t),t&&Object.keys(t).forEach(function(t){e.add(t)}),this.trigger("items:load")},onItemDelete:function(t){this._authoredLocally[t]=!1,this.list.rm("r-"+t)},onItemCreate:function(t){this.add(t)},onForeignItemCreate:function(t){this.add(t)},onItemUpdate:function(t,e){var i;i=this._isArray?this.list.items[t]:this.get(t),i.update(e)},onChange:function(t,e){var i="";if(this._isArray)i="update";else{if(t.indexOf(".")>-1)return;if(e){if(!this.get(t))return;i="update"}else i="delete"}this.trigger("item:"+i,t,e)},onLoad:function(t){var e="item:create";this._isArray||this.get(t)||(this._authoredLocally[t]||(e="foreign:"+e),this.trigger(e,t))},onInsert:function(t){this.trigger("item:create",t)},onRemove:function(t){this.trigger("item:delete",t)},reset:function(){this.items.forEach(function(t){t.reset()})}});
+  </script>
+</element>
