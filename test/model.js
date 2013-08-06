@@ -62,12 +62,30 @@ window.Model = function(modelData, populated) {
     },
     del: function() {
       this.delWasCalledWith = arguments;
+    },
+    fn: function() {},
+    filter: function() {
+      var thisData = this.data,
+      data = [];
+
+      Object.keys(thisData).forEach(function(key) {
+        var value = thisData[key];
+        value.id = key;
+        data.push(value);
+      });
+      //console.log(data);
+
+      return {
+        ref: function() {
+          return new Model(data, true);
+        }
+      }
     }
   };
 
   if (populated) {
     model.data = modelData;
-    model.subscribe = null;
+    //model.subscribe = null;
   }
 
   return model;

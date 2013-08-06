@@ -28,7 +28,7 @@ module.exports = function(grunt) {
     watch: {
       build: {
         files: ["script.js", "component.html"],
-        tasks: ["build"]
+        tasks: ["testBuild"]
       }
     }
   });

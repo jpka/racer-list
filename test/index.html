@@ -6,6 +6,11 @@
     <script src="/base/test/model.js"></script>
     <link rel="import" href="/base/test-index.html"/>
     <link rel="import" href="/base/test/elementWithModel.html"/>
+    <style>
+      html, body {
+        font-size: 120px;
+      }
+    </style>
   </head>
   <body>
     <racer-list id="element" itemType="element-with-model" at="items"></racer-list>
@@ -14,11 +19,19 @@
     <script>
       window.addEventListener("WebComponentsReady", function() {
         var data = {
-          items: {
-          }
+          a: {text: "text1"},
+          b: {text: "text2"},
+          c: {text: "text2"},
+          d: {text: "text2"},
+          e: {text: "text2"},
+          f: {text: "text2"},
+          g: {text: "text2"},
+          h: {text: "text2"},
+          i: {text: "text2"},
+          j: {text: "text2"},
+          k: {text: "text2"},
+          l: {text: "text2"}
         };
-        data.items[0] = {text: "Text1"};
-        data.items[1] = {text: "Text2"};
         document.querySelector("#element").model = new Model(data);
       });
     </script>

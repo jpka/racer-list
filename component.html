@@ -1,12 +1,15 @@
 <link rel="import" href="/components/racer-element/index.html"/>
 <link rel="import" href="/components/smart-list/index.html"/>
-<element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes">
+<polymer-element name="racer-list" extends="racer-element" attributes="itemType at reverse itemAttributes filter softUpdates newMessage">
   <style polymer-scope="global">
     racer-element {
       display: block;
     }
   </style>
+  <template>
+    <content></content>
+  </template>
   <script>
     @@script
   </script>
-</element>
+</polymer-element>

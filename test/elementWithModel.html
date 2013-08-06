@@ -1,12 +1,12 @@
-<element name="element-with-model" attributes="model">
+<polymer-element name="element-with-model" attributes="model">
   <template>
     <div>{{ model.text }}</div>
   </template>
   <script>
-    Polymer.register(this, {
+    Polymer("element-with-model", {
       ready: function() {
         this.model = new Object();
       }
     });
   </script>
-</element>
+</polymer-element>
